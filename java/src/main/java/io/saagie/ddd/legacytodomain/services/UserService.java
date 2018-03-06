@@ -1,8 +1,7 @@
 package io.saagie.ddd.legacytodomain.services;
 
-import io.saagie.ddd.legacytodomain.controllers.UserRegistrationDto;
+import io.saagie.ddd.legacytodomain.controllers.PlatformRoleDto;
 import io.saagie.ddd.legacytodomain.dao.PlatformDao;
-import io.saagie.ddd.legacytodomain.dao.UserAlreadyExistsException;
 import io.saagie.ddd.legacytodomain.dao.UserDao;
 import io.saagie.ddd.legacytodomain.model.Platform;
 import io.saagie.ddd.legacytodomain.model.User;
@@ -10,9 +9,7 @@ import io.saagie.ddd.legacytodomain.model.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.saagie.ddd.legacytodomain.model.Role.ADMIN;
@@ -31,34 +28,36 @@ public class UserService {
         this.messageService = messageService;
     }
 
-    public void register(UserRegistrationDto registration) throws TooManyPlatformWritersException, UserAlreadyExistsException {
-        Platform defaultPlatform = this.platformDao.get(registration.getDefaultPlatform());
-        User user = new User(registration.getFirstname(), registration.getLastname(), registration.getEmail(), defaultPlatform);
-
-        for (Map.Entry<Integer, String> entry : registration.getPlatforms().entrySet()) {
-            Integer platformId = entry.getKey();
-            String role = entry.getValue();
-
-            Platform platform = this.platformDao.get(platformId);
-
-            long writerCount = platform
-                    .getRoles()
-                    .entrySet()
-                    .stream()
-                    .filter(keyValue -> keyValue.getValue().equals(WRITER)).count();
-            if (Role.fromLabel(role) == WRITER && writerCount == 3) {
-                throw new TooManyPlatformWritersException();
-            }
-
-            if (platform.getRoles().entrySet().stream().anyMatch(keyValue -> keyValue.getValue().equals(ADMIN))
-                    && Role.fromLabel(role) == WRITER) {
-                this.messageService.notifyPlatformAdminOfNewWriter(platform, user);
-            }
-            user.addRole(platformId, Role.fromLabel(role));
+    public void definePlatformRole(Integer id, PlatformRoleDto platformRole) throws TooManyPlatformWritersException, UserNotFoundException, AuthorizationLimitReachedException {
+        User user = this.userDao.get(id);
+        if (user == null) {
+            throw new UserNotFoundException(id);
         }
 
-        this.userDao.create(user);
-        this.messageService.sendRegistrationConfirmation(user);
+        Platform platform = this.platformDao.get(platformRole.getPlatformId());
+
+        long writerCount = platform
+                .getRoles()
+                .entrySet()
+                .stream()
+                .filter(keyValue -> keyValue.getValue().equals(WRITER)).count();
+        if (Role.fromLabel(platformRole.getRole()) == WRITER && writerCount == 3) {
+            throw new TooManyPlatformWritersException();
+        }
+
+        if (user.getRoles().entrySet().stream().filter(entry -> entry.getValue() == ADMIN).count() == 3 ||
+                user.getRoles().entrySet().stream().filter(entry -> entry.getValue() == WRITER).count() == 5) {
+            throw new AuthorizationLimitReachedException();
+        }
+
+        if (platform.getRoles().entrySet().stream().anyMatch(keyValue -> keyValue.getValue().equals(ADMIN))
+                && Role.fromLabel(platformRole.getRole()) == WRITER) {
+            this.messageService.notifyPlatformAdminOfNewWriter(platform, user);
+        }
+        user.addRole(platformRole.getPlatformId(), Role.fromLabel(platformRole.getRole()));
+
+        this.userDao.save(user);
+        this.messageService.sendPlatformRoleConfirmation(user, platformRole.getPlatformId(), Role.fromLabel(platformRole.getRole()));
     }
 
     public List<User> listAllUsers() {

@@ -1,8 +1,9 @@
 package io.saagie.ddd.legacytodomain.controllers;
 
-import io.saagie.ddd.legacytodomain.dao.UserAlreadyExistsException;
 import io.saagie.ddd.legacytodomain.model.User;
+import io.saagie.ddd.legacytodomain.services.AuthorizationLimitReachedException;
 import io.saagie.ddd.legacytodomain.services.TooManyPlatformWritersException;
+import io.saagie.ddd.legacytodomain.services.UserNotFoundException;
 import io.saagie.ddd.legacytodomain.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,15 +27,17 @@ public class UserController {
         return ResponseEntity.ok(this.userService.listAllUsers());
     }
 
-    @PostMapping("")
-    public ResponseEntity<Void> register(@RequestBody UserRegistrationDto registration) {
+    @PostMapping("/{id}/roles")
+    public ResponseEntity<Void> definePlatformRole(@PathVariable("id") Integer id, @RequestBody PlatformRoleDto platformRole) {
         try {
-            this.userService.register(registration);
+            this.userService.definePlatformRole(id, platformRole);
             return ResponseEntity
                     .created(ServletUriComponentsBuilder.fromCurrentRequest().build().toUri())
                     .build();
-        } catch (TooManyPlatformWritersException | UserAlreadyExistsException e) {
+        } catch (TooManyPlatformWritersException | AuthorizationLimitReachedException e) {
             return ResponseEntity.badRequest().build();
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }

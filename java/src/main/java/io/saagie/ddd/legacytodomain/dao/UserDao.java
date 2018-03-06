@@ -18,14 +18,8 @@ public class UserDao {
         init();
     }
 
-    public void create(User user) throws UserAlreadyExistsException {
-        if (users.values().stream().anyMatch(u -> u.getEmail().equalsIgnoreCase(user.getEmail()))) {
-            throw new UserAlreadyExistsException(user.getEmail());
-        }
-
-        Integer nextId = this.users.size();
-        user.setId(nextId);
-        this.users.put(nextId, user);
+    public void save(User user) {
+        this.users.put(user.getId(), user);
     }
 
     public List<User> getAll() {
@@ -37,26 +31,19 @@ public class UserDao {
     }
 
     private void init() {
-        Platform defaultPlatform = new Platform(1, "one");
-
-        User george = new User("George", "Abitbol", "george@gd.ca", defaultPlatform);
-        george.setId(123);
+        User george = new User(123, "George", "Abitbol", "george@gd.ca");
         this.users.put(george.getId(), george);
 
-        User peter = new User("Peter", "Hoffman", "peter@gd.ca", defaultPlatform);
-        peter.setId(456);
+        User peter = new User(456, "Peter", "Hoffman", "peter@gd.ca");
         this.users.put(peter.getId(), peter);
 
-        User steven = new User("Steven", "Redford", "steven@gd.ca", defaultPlatform);
-        steven.setId(457);
+        User steven = new User(457, "Steven", "Redford", "steven@gd.ca");
         this.users.put(steven.getId(), steven);
 
-        User dave = new User("Dave", "Newman", "dave@gd.ca", defaultPlatform);
-        dave.setId(458);
+        User dave = new User(458, "Dave", "Newman", "dave@gd.ca");
         this.users.put(dave.getId(), dave);
 
-        User hugues = new User("Hugues", "Fonda", "hugues@gd.ca", defaultPlatform);
-        hugues.setId(789);
+        User hugues = new User(789,"Hugues", "Fonda", "hugues@gd.ca");
         this.users.put(hugues.getId(), hugues);
     }
 }

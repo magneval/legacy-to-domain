@@ -6,19 +6,19 @@ import java.util.Map;
 public class Platform {
     private Integer id;
     private String name;
-    private Map<Integer, Role> roles;
+    private Map<Integer, Role> roles = new HashMap<>();
 
-    public Platform(int id, String name) {
+    public Platform(Integer id, String name) {
         this(id, name, new HashMap<>());
     }
 
-    public Platform(int id, String name, Map<Integer, Role> roles) {
+    public Platform(Integer id, String name, Map<Integer, Role> roles) {
         this.id = id;
         this.name = name;
         this.roles = roles;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 

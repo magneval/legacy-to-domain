@@ -9,18 +9,17 @@ public class User {
     private String lastname;
     private String email;
     private Map<Integer, Role> roles;
-    private Platform defaultPlatform;
 
-    public User(String firstname, String lastname, String email, Platform defaultPlatform) {
-        this(firstname, lastname, email, defaultPlatform, new HashMap<>());
-    }
-
-    public User(String firstname, String lastname, String email, Platform defaultPlatform, Map<Integer, Role> roles) {
+    public User(Integer id, String firstname, String lastname, String email, Map<Integer, Role> roles) {
         this.firstname = firstname;
         this.lastname = lastname;
         this.email = email;
-        this.defaultPlatform = defaultPlatform;
         this.roles = roles;
+        this.id = id;
+    }
+
+    public User(Integer id, String firstname, String lastname, String email) {
+        this(id, firstname, lastname, email, new HashMap<>());
     }
 
     public Integer getId() {
@@ -67,14 +66,6 @@ public class User {
         this.roles.put(platformId, role);
     }
 
-    public Platform getDefaultPlatform() {
-        return defaultPlatform;
-    }
-
-    public void setDefaultPlatform(Platform defaultPlatform) {
-        this.defaultPlatform = defaultPlatform;
-    }
-
     @Override
     public String toString() {
         return "User{" +
@@ -83,7 +74,6 @@ public class User {
                 ", lastname='" + lastname + '\'' +
                 ", email='" + email + '\'' +
                 ", roles=" + roles +
-                ", defaultPlatform=" + defaultPlatform +
                 '}';
     }
 }
